@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Diva Dashboard</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#6366f1;--s:#22d3ee;--bg:#0f172a;--c:#1e293b;--t:#e2e8f0;--g:linear-gradient(135deg,var(--p),var(--s))}
+body{font-family:system-ui;background:var(--bg);color:var(--t)}
+.light{--bg:#fff;--c:#f1f5f9;--t:#1e293b}
+.d{display:grid;grid-template-columns:200px 1fr;height:100vh}
+.s{background:var(--c);padding:20px;transition:.3s;margin-left:0}
+.s.h{margin-left:-200px}
+.m{display:flex;flex-direction:column}
+.h{background:var(--c);padding:15px;display:flex;justify-content:space-between;align-items:center}
+.c{flex:1;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;overflow:auto}
+.w{background:var(--c);padding:15px;border-radius:10px;border-left:3px solid var(--p)}
+.b{padding:10px 20px;background:var(--g);color:#fff;border:0;border-radius:5px;cursor:pointer}
+.n{padding:8px;margin:5px 0;cursor:pointer;border-radius:5px;transition:.3s}
+.n:hover,.n.a{background:var(--p);color:#fff}
+.f{background:var(--c);padding:10px;text-align:center}
+input,select{padding:8px;margin:5px;background:var(--bg);color:var(--t);border:1px solid var(--p);border-radius:5px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.st{background:var(--bg);padding:10px;border-radius:5px}
+.ch{height:150px}
+.ac{display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg);border-radius:5px;margin:5px 0}
+.av{width:35px;height:35px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{padding:8px;text-align:left;border-bottom:1px solid var(--bg)}
+.ham{display:none;cursor:pointer;font-size:24px}
+@media(max-width:768px){
+.d{grid-template-columns:1fr}
+.s{position:fixed;height:100vh;z-index:99;width:200px}
+.ham{display:block}
+.c{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const team=['Diva','Mani','Bhanu','Mike','Virat'];
+const colors=['#6366f1','#22d3ee','#10b981','#f59e0b','#ef4444'];
+
+const App=()=>{
+  const [menu,setMenu]=useState(true);
+  const [page,setPage]=useState('dashboard');
+  const [theme,setTheme]=useState('dark');
+  const [data,setData]=useState(null);
+  const charts=useRef({});
+
+  useEffect(()=>{
+    document.body.className=theme;
+    setData({
+      revenue:[45,52,38,65,48,72,56,61,67,73,79,85],
+      users:[120,135,125,145,160,175,165,180,190,205,215,230],
+      sales:[30,45,35,50,40,55,45,60,50,65,55,70],
+      tasks:[
+        {id:1,title:'Landing Page Design',user:'Diva',status:'Completed',progress:100},
+        {id:2,title:'Dashboard Builder',user:'Mani',status:'In Progress',progress:75},
+        {id:3,title:'Mobile App Design',user:'Bhanu',status:'In Progress',progress:60},
+        {id:4,title:'API Integration',user:'Mike',status:'Pending',progress:30},
+        {id:5,title:'Database Setup',user:'Virat',status:'Completed',progress:100}
+      ],
+      activity:[
+        {user:'Diva',action:'Deployed new version',time:'2m ago',type:'deploy'},
+        {user:'Mani',action:'Fixed critical bug',time:'15m ago',type:'fix'},
+        {user:'Bhanu',action:'Updated UI components',time:'1h ago',type:'update'},
+        {user:'Mike',action:'Merged pull request',time:'2h ago',type:'merge'},
+        {user:'Virat',action:'Completed code review',time:'3h ago',type:'review'}
+      ],
+      performance:{
+        cpu:68,memory:45,disk:72,network:89,
+        servers:[
+          {name:'Server 1',status:'online',uptime:'99.9%',load:45},
+          {name:'Server 2',status:'online',uptime:'99.7%',load:62},
+          {name:'Server 3',status:'maintenance',uptime:'95.2%',load:0}
+        ]
+      }
+    });
+  },[theme]);
+
+  const createChart=(id,type,data,label)=>{
+    const ctx=document.getElementById(id)?.getContext('2d');
+    if(!ctx)return;
+    if(charts.current[id])charts.current[id].destroy();
+    charts.current[id]=new Chart(ctx,{
+      type,
+      data:{
+        labels:['J','F','M','A','M','J','J','A','S','O','N','D'],
+        datasets:[{
+          label,
+          data,
+          backgroundColor:type==='bar'?colors:colors[0],
+          borderColor:colors[0],
+          tension:0.4
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          y:{display:type!=='doughnut',grid:{display:false}},
+          x:{display:type!=='doughnut',grid:{display:false}}
+        }
+      }
+    });
+  };
+
+  useEffect(()=>{
+    if(data){
+      createChart('c1','line',data.revenue,'Revenue');
+      createChart('c2','bar',data.sales,'Sales');
+      createChart('c3','doughnut',[35,25,20,15,5],'Team');
+      createChart('c4','line',data.users,'Users');
+    }
+  },[data,page]);
+
+  const pages={
+    dashboard:()=>(
+      <>
+        <div className="w">
+          <h3>Total Revenue</h3>
+          <h1 style={{color:'var(--p)',margin:'10px 0'}}>$847.5K</h1>
+          <div className="ch"><canvas id="c1"/></div>
+        </div>
+        <div className="w">
+          <h3>Active Users</h3>
+          <h1 style={{color:'var(--s)',margin:'10px 0'}}>2,345</h1>
+          <div className="ch"><canvas id="c4"/></div>
+        </div>
+        <div className="w">
+          <h3>Team Performance</h3>
+          <div className="ch"><canvas id="c3"/></div>
+          <div style={{display:'flex',gap:5,marginTop:10,flexWrap:'wrap'}}>
+            {team.map((m,i)=><span key={m} style={{fontSize:12,padding:'2px 8px',background:colors[i],borderRadius:3,color:'#fff'}}>{m}</span>)}
+          </div>
+        </div>
+        <div className="w">
+          <h3>Quick Stats</h3>
+          <div className="g">
+            <div className="st"><small>Growth</small><h3 style={{color:'var(--p)'}}>+24.5%</h3></div>
+            <div className="st"><small>Orders</small><h3 style={{color:'var(--s)'}}>1,842</h3></div>
+            <div className="st"><small>Conversion</small><h3 style={{color:'#10b981'}}>3.6%</h3></div>
+            <div className="st"><small>Bounce</small><h3 style={{color:'#f59e0b'}}>42.1%</h3></div>
+          </div>
+        </div>
+        <div className="w" style={{gridColumn:'span 2'}}>
+          <h3>Recent Activity</h3>
+          {data?.activity.map((a,i)=>(
+            <div key={i} className="ac">
+              <div className="av">{a.user[0]}</div>
+              <div style={{flex:1}}>
+                <b>{a.user}</b> {a.action}
+                <div style={{fontSize:12,opacity:0.7}}>{a.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
+    analytics:()=>(
+      <>
+        <div className="w">
+          <h3>Sales Analytics</h3>
+          <div className="ch"><canvas id="c2"/></div>
+        </div>
+        <div className="w">
+          <h3>Performance Metrics</h3>
+          <div className="g">
+            <div className="st">CPU: <b>{data?.performance.cpu}%</b></div>
+            <div className="st">Memory: <b>{data?.performance.memory}%</b></div>
+            <div className="st">Disk: <b>{data?.performance.disk}%</b></div>
+            <div className="st">Network: <b>{data?.performance.network}%</b></div>
+          </div>
+        </div>
+        <div className="w" style={{gridColumn:'span 2'}}>
+          <h3>Server Status</h3>
+          <table className="tbl">
+            <thead><tr><th>Server</th><th>Status</th><th>Uptime</th><th>Load</th></tr></thead>
+            <tbody>
+              {data?.performance.servers.map(s=>(
+                <tr key={s.name}>
+                  <td>{s.name}</td>
+                  <td><span style={{color:s.status==='online'?'#10b981':'#f59e0b'}}>{s.status}</span></td>
+                  <td>{s.uptime}</td>
+                  <td>{s.load}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="w">
+          <h3>Team Contribution</h3>
+          {team.map((m,i)=>(
+            <div key={m} style={{margin:'10px 0'}}>
+              <div style={{display:'flex',justifyContent:'space-between'}}><b>{m}</b><span>{20+i*15}%</span></div>
+              <div style={{height:8,background:'var(--bg)',borderRadius:4,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${20+i*15}%`,background:colors[i]}}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
+    users:()=>(
+      <>
+        <div className="w" style={{gridColumn:'span 3'}}>
+          <h3>Team Members</h3>
+          <table className="tbl">
+            <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Projects</th></tr></thead>
+            <tbody>
+              <tr><td><b>Diva</b></td><td>Team Lead</td><td>Engineering</td><td style={{color:'#10b981'}}>Active</td><td>12</td></tr>
+              <tr><td><b>Mani</b></td><td>Full Stack Dev</td><td>Engineering</td><td style={{color:'#10b981'}}>Active</td><td>8</td></tr>
+              <tr><td><b>Bhanu</b></td><td>UI/UX Designer</td><td>Design</td><td style={{color:'#10b981'}}>Active</td><td>6</td></tr>
+              <tr><td><b>Mike</b></td><td>Backend Dev</td><td>Engineering</td><td style={{color:'#f59e0b'}}>Away</td><td>7</td></tr>
+              <tr><td><b>Virat</b></td><td>DevOps</td><td>Operations</td><td style={{color:'#10b981'}}>Active</td><td>5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="w">
+          <h3>User Growth</h3>
+          <div className="ch"><canvas id="c4"/></div>
+        </div>
+      </>
+    ),
+    settings:()=>(
+      <div className="w" style={{gridColumn:'span 3'}}>
+        <h3>Settings</h3>
+        <form onSubmit={e=>{e.preventDefault();alert('Settings saved!')}}>
+          <div className="g">
+            <div>
+              <label>Profile Name</label>
+              <input defaultValue="Diva" required/>
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" defaultValue="diva@company.com" required/>
+            </div>
+            <div>
+              <label>Language</label>
+              <select><option>English</option><option>Spanish</option><option>French</option></select>
+            </div>
+            <div>
+              <label>Timezone</label>
+              <select><option>UTC+5:30</option><option>UTC+0</option><option>UTC-5</option></select>
+            </div>
+            <div>
+              <label>Notifications</label>
+              <select><option>All</option><option>Important Only</option><option>None</option></select>
+            </div>
+            <div>
+              <label>Data Export</label>
+              <select><option>CSV</option><option>JSON</option><option>Excel</option></select>
+            </div>
+          </div>
+          <button className="b" style={{marginTop:20}}>Save Settings</button>
+        </form>
+      </div>
+    ),
+    reports:()=>(
+      <>
+        <div className="w" style={{gridColumn:'span 3'}}>
+          <h3>Project Reports</h3>
+          <table className="tbl">
+            <thead><tr><th>Project</th><th>Assigned</th><th>Status</th><th>Progress</th><th>Deadline</th></tr></thead>
+            <tbody>
+              {data?.tasks.map(t=>(
+                <tr key={t.id}>
+                  <td><b>{t.title}</b></td>
+                  <td>{t.user}</td>
+                  <td>{t.status}</td>
+                  <td>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{flex:1,height:8,background:'var(--bg)',borderRadius:4}}>
+                        <div style={{height:'100%',width:`${t.progress}%`,background:t.progress===100?'#10b981':'var(--p)',borderRadius:4}}/>
+                      </div>
+                      {t.progress}%
+                    </div>
+                  </td>
+                  <td>Dec {15+t.id}, 2024</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="w">
+          <h3>Export Options</h3>
+          <button className="b" onClick={()=>alert('Report exported!')}>Export PDF</button>
+          <button className="b" style={{marginLeft:10}} onClick={()=>alert('Data downloaded!')}>Download CSV</button>
+        </div>
+      </>
+    )
+  };
+
+  return(
+    <div className="d">
+      <aside className={`s ${!menu?'h':''}`}>
+        <h2 style={{color:'var(--p)',marginBottom:20}}>DIVA HUB</h2>
+        {['dashboard','analytics','users','settings','reports'].map(p=>(
+          <div key={p} className={`n ${page===p?'a':''}`} onClick={()=>setPage(p)}>
+            {p.charAt(0).toUpperCase()+p.slice(1)}
+          </div>
+        ))}
+      </aside>
+      <main className="m">
+        <header className="h">
+          <div style={{display:'flex',gap:20,alignItems:'center'}}>
+            <span className="ham" onClick={()=>setMenu(!menu)}>☰</span>
+            <input placeholder="Search..." style={{width:200}}/>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="b" onClick={()=>setTheme(theme==='dark'?'light':'dark')}>
+              {theme==='dark'?'☀️':'🌙'}
+            </button>
+            <button className="b">🔔 3</button>
+            <button className="b">Diva ▼</button>
+          </div>
+        </header>
+        <div className="c">
+          {pages[page]?.()}
+        </div>
+        <footer className="f">
+          © 2024 Diva Dashboard | Team: {team.join(', ')}
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
